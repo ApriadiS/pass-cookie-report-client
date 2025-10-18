@@ -86,7 +86,7 @@
 <TooltipPrimitive.Root variant="none">
 	<div
 		class={cn(
-			"border-border/50 bg-background grid min-w-[9rem] items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl",
+			"border-border/50 bg-background grid min-w-0 w-max max-w-[85vw] md:min-w-[12rem] md:max-w-none items-start gap-4 rounded-lg border px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm shadow-xl break-words",
 			className
 		)}
 		{...restProps}
@@ -94,14 +94,14 @@
 		{#if !nestLabel}
 			{@render TooltipLabel()}
 		{/if}
-		<div class="grid gap-1.5">
+		<div class="grid gap-4">
 			{#each tooltipCtx.payload as item, i (item.key + i)}
 				{@const key = `${nameKey || item.key || item.name || "value"}`}
 				{@const itemConfig = getPayloadConfigFromPayload(chart.config, item, key)}
 				{@const indicatorColor = color || item.payload?.color || item.color}
 				<div
 					class={cn(
-						"[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:size-2.5",
+						"[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-4 [&>svg]:size-2.5",
 						indicator === "dot" && "items-center"
 					)}
 				>
@@ -133,20 +133,20 @@
 						{/if}
 						<div
 							class={cn(
-								"flex flex-1 shrink-0 justify-between leading-none",
+								"flex flex-1 shrink-0 justify-between leading-none min-w-0 gap-4",
 								nestLabel ? "items-end" : "items-center"
 							)}
 						>
-							<div class="grid gap-1.5">
+							<div class="grid gap-2 min-w-0 flex-shrink">
 								{#if nestLabel}
 									{@render TooltipLabel()}
 								{/if}
-								<span class="text-muted-foreground">
+								<span class="text-muted-foreground truncate">
 									{itemConfig?.label || item.name}
 								</span>
 							</div>
 							{#if item.value !== undefined}
-								<span class="text-foreground font-mono font-medium tabular-nums">
+								<span class="text-foreground font-mono font-medium tabular-nums flex-shrink-0 ml-auto">
 									{item.value.toLocaleString()}
 								</span>
 							{/if}
