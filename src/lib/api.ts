@@ -64,18 +64,31 @@ export async function startFetch(
 
 export async function fetchData(
    fromDate: DateValue,
-   toDate: DateValue
+   toDate: DateValue,
+   endpoint: 'data-cached' | 'force-empty' | 'force-refresh' = 'data-cached'
 ): Promise<TransaksiResponse | NestedTransaksiResponse> {
    const cookie = get(globalState).cookie;
 
    const formatedFromDate = formatDateDMY(fromDate);
    const formatedToDate = formatDateDMY(toDate);
-   console.log("Fetching data with dates:", formatedFromDate, formatedToDate);
+   console.log(`Fetching data with dates: ${formatedFromDate} - ${formatedToDate} using ${endpoint}`);
+
+   // Show toast for data-cached endpoint
+   if (endpoint === 'data-cached') {
+      import('svelte-sonner').then(({ toast }) => {
+         toast.info('Backend sedang mengambil data dari database', {
+            description: 'Menggunakan looping request pagination'
+         });
+      });
+   }
 
    const startTime = performance.now();
-   track('fetch_data', { dateRange: `${formatedFromDate} - ${formatedToDate}` });
+   track('fetch_data', { 
+      dateRange: `${formatedFromDate} - ${formatedToDate}`,
+      endpoint 
+   });
 
-   const url = `${API_BASE_URL}/data-cached`;
+   const url = `${API_BASE_URL}/${endpoint}`;
    const res = await fetch(url, {
       method: "POST",
       headers: {
@@ -106,8 +119,23 @@ export async function fetchData(
    track('fetch_data_completed', { 
       duration: Math.round(endTime - startTime),
       status: res.status,
-      dataCount
+      dataCount,
+      endpoint
    });
 
    return response;
+}
+
+export async function forceEmptyData(
+   fromDate: DateValue,
+   toDate: DateValue
+): Promise<TransaksiResponse | NestedTransaksiResponse> {
+   return fetchData(fromDate, toDate, 'force-empty');
+}
+
+export async function forceRefreshData(
+   fromDate: DateValue,
+   toDate: DateValue
+): Promise<TransaksiResponse | NestedTransaksiResponse> {
+   return fetchData(fromDate, toDate, 'force-refresh');
 }

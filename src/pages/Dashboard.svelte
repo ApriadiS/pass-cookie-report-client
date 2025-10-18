@@ -18,6 +18,7 @@
    import { onMount } from "svelte";
    import { Button } from "$lib/components/ui/button/index.js";
 
+
    const API_BASE_URL =
       import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -68,6 +69,7 @@
    let isLoading = $state(false);
    let pollingInterval: ReturnType<typeof setInterval> | null = null;
 
+
    // Load data ketika component mount
    onMount(() => {
       loadData();
@@ -100,8 +102,8 @@
          // Handle different response types
          if (result.status === "processing") {
             // Start polling for job completion
-            toast.info("Data sedang diproses...", {
-               description: "Menunggu background job selesai",
+            toast.info("Backend sedang mengambil data dari database", {
+               description: "Menggunakan looping request pagination",
             });
 
             await startPolling(fromDate, toDate);
@@ -110,8 +112,8 @@
 
          if (result.status === "not_found") {
             // Start background job
-            toast.info("Memulai pengambilan data...", {
-               description: "Data belum tersedia, memulai background job",
+            toast.info("Backend sedang mengambil data dari database", {
+               description: "Memulai looping request pagination",
             });
 
             await startFetch(fromDate, toDate);
@@ -242,7 +244,7 @@
             <div
                class="w-8 h-8 mx-auto mb-2 border-b-2 rounded-full animate-spin border-primary"
             ></div>
-            <p class="text-sm text-muted-foreground">Memuat data...</p>
+            <p class="text-sm text-muted-foreground">Backend sedang mengambil data...</p>
          </div>
       </div>
    {/if}
