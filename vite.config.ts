@@ -11,4 +11,7 @@ export default defineConfig({
          $lib: path.resolve("./src/lib"),
       },
    },
+   server: {
+      host: true,
+   },
 });
