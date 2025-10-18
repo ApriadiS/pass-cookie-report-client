@@ -91,10 +91,22 @@ export async function fetchData(
    const endTime = performance.now();
    const response: TransaksiResponse | NestedTransaksiResponse = await res.json();
    
+   // Calculate data count based on response type
+   let dataCount = 0;
+   if ('data' in response && response.data) {
+      if (Array.isArray(response.data)) {
+         dataCount = response.data.length;
+      } else if ('data' in response.data) {
+         dataCount = response.data.data?.length || 0;
+      }
+   } else if ('total_transaksi' in response) {
+      dataCount = response.total_transaksi || 0;
+   }
+   
    track('fetch_data_completed', { 
       duration: Math.round(endTime - startTime),
       status: res.status,
-      dataCount: 'data' in response ? response.data?.length || 0 : response.total_transaksi || 0
+      dataCount
    });
 
    return response;

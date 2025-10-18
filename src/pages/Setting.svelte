@@ -5,26 +5,23 @@
       setCookie,
       setTheme,
       setTimezone,
-      setQueries,
    } from "$lib/setting.js";
    import { Label } from "$lib/components/ui/label";
    import { Textarea } from "$lib/components/ui/textarea";
    import { Button } from "$lib/components/ui/button";
    import { Switch } from "$lib/components/ui/switch";
    import { toast } from "svelte-sonner";
+   import QuerySettings from "$lib/components/query-settings.svelte";
 
    let isDark = $state($globalState.theme === "dark");
    let cookieValue = $state($globalState.cookie);
    let selectedTimezone = $state($globalState.timezone);
-   let queryOnline = $state($globalState.queryOnline);
-   let queryOffline = $state($globalState.queryOffline);
 
    function handleSubmit(e: Event) {
       e.preventDefault();
       setTheme(isDark ? "dark" : "light");
       setCookie(cookieValue);
       setTimezone(selectedTimezone);
-      setQueries(queryOnline, queryOffline);
 
       const now = new Date();
       const dateStr = now.toLocaleDateString("id-ID", {
@@ -83,24 +80,7 @@
                placeholder="Masukkan cookie..."
             />
          </div>
-         <div class="space-y-2">
-            <Label for="query-online">Query Transaksi Online</Label>
-            <Textarea
-               id="query-online"
-               bind:value={queryOnline}
-               rows={4}
-               placeholder="Masukkan query online..."
-            />
-         </div>
-         <div class="space-y-2">
-            <Label for="query-offline">Query Transaksi Offline</Label>
-            <Textarea
-               id="query-offline"
-               bind:value={queryOffline}
-               rows={4}
-               placeholder="Masukkan query offline..."
-            />
-         </div>
+         <QuerySettings />
          <Card.Footer class="flex justify-end">
             <Button type="submit">Simpan</Button>
          </Card.Footer>

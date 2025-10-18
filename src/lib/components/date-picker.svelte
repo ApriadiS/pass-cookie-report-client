@@ -20,15 +20,24 @@
       disabled = false,
    } = $props();
 
+   let open = $state(false);
+
    // Fungsi untuk mendisable tanggal sebelum min
    function disableDate(date: DateValue) {
       if (!min) return false;
       // diasumsikan date dan min bertipe DateValue dan punya method compare
       return date.compare(min) < 0;
    }
+
+   // Auto-close ketika tanggal dipilih
+   $effect(() => {
+      if (value) {
+         open = false;
+      }
+   });
 </script>
 
-<Popover.Root>
+<Popover.Root bind:open>
    <Popover.Trigger>
       {#snippet child({ props })}
          <Button

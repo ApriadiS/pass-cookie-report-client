@@ -11,6 +11,7 @@
    import All from "./pages/All.svelte";
    import Setting from "./pages/Setting.svelte";
    import Dashboard from "./pages/Dashboard.svelte";
+   import Query from "./pages/Query.svelte";
    import Label from "$lib/components/ui/label/label.svelte";
    import { Toaster } from "svelte-sonner";
 
@@ -50,6 +51,8 @@
             <All />
          {:else if $currentPage === "setting"}
             <Setting />
+         {:else if $currentPage === "online" || $currentPage === "offline"}
+            <Query />
          {/if}
       </div>
    </Sidebar.Inset>

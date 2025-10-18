@@ -9,14 +9,6 @@
                   title: "Dashboard",
                   url: "/",
                },
-               // {
-               //    title: "Laporan Online",
-               //    url: "/online",
-               // },
-               // {
-               //    title: "Laporan Offline",
-               //    url: "/offline",
-               // },
                {
                   title: "Semua Laporan",
                   url: "/all",
@@ -40,11 +32,14 @@
    import { navigate } from "$lib/routing";
    import Title from "./version-switcher.svelte";
    import * as Sidebar from "$lib/components/ui/sidebar/index.js";
+   import { useSidebar } from "$lib/components/ui/sidebar/context.svelte.js";
    import type { ComponentProps } from "svelte";
    let {
       ref = $bindable(null),
       ...restProps
    }: ComponentProps<typeof Sidebar.Root> = $props();
+   
+   const sidebar = useSidebar();
 </script>
 
 <Sidebar.Root {...restProps} bind:ref>
@@ -70,6 +65,10 @@
                                     // Ambil nama page tanpa slash dan pastikan sesuai tipe Page
                                     const page = item.url.replace("/", "");
                                     navigate(page as any);
+                                    // Auto-close sidebar di mobile setelah navigasi
+                                    if (sidebar.isMobile) {
+                                       sidebar.setOpenMobile(false);
+                                    }
                                  }}>{item.title}</a
                               >
                            {/snippet}
