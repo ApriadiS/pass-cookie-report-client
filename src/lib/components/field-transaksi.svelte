@@ -38,6 +38,9 @@
    let hasSelectedDates = $derived(fromDate && toDate);
    let hasData = $derived(transaksiData.data.length > 0);
 
+   // Export dates for parent components
+   export { fromDate, toDate };
+
    // Function to reclassify existing data
    export function reclassifyData() {
       if (hasData) {
@@ -47,6 +50,23 @@
             $globalState.queryOffline
          );
       }
+   }
+
+   // Function to update data from external sources
+   export function updateData(newData: TransaksiResponse | NestedTransaksiResponse) {
+      // Handle nested response structure
+      if (
+         "status" in newData &&
+         newData.status === "completed" &&
+         "data" in newData.data
+      ) {
+         transaksiData = (newData as NestedTransaksiResponse).data;
+      } else if (Array.isArray(newData.data)) {
+         transaksiData = newData as TransaksiResponse;
+      } else {
+         console.log("Invalid response:", newData);
+      }
+      reclassifyData();
    }
 
    $effect(() => {
