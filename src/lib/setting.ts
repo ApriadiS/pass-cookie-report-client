@@ -10,8 +10,19 @@ export interface GlobalState {
 }
 
 // Initialize global state with default values
+const getInitialCookie = (): string => {
+   if (typeof window !== "undefined") {
+      const storedCookie = localStorage.getItem("cookie");
+      if (storedCookie && storedCookie.trim() !== "") {
+         console.log("[SETTING] Cookie loaded from localStorage");
+         return storedCookie;
+      }
+   }
+   return import.meta.env.VITE_DEFAULT_COOKIE || "";
+};
+
 const initialState: GlobalState = {
-   cookie: import.meta.env.VITE_DEFAULT_COOKIE || "",
+   cookie: getInitialCookie(),
    theme: "light",
    timezone: "WIB",
    queryOnline: "",
