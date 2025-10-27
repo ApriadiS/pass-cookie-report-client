@@ -7,9 +7,11 @@
    import {
       fetchData,
       startFetch,
-      type TransaksiResponse,
-      type NestedTransaksiResponse,
-   } from "$lib/api";
+      checkAuthStatus,
+      setAuthenticating,
+      clearPendingRequests,
+   } from "$lib/apiClient";
+   import type { TransaksiResponse, NestedTransaksiResponse } from "$lib/api";
    import { CalendarDate } from "@internationalized/date";
    import { toast } from "svelte-sonner";
    import { navigate, currentPage } from "$lib/routing";
@@ -17,14 +19,20 @@
    import { aggregateChartData, type ChartPeriod } from "$lib/chart-aggregator";
    import { onMount } from "svelte";
    import { Button } from "$lib/components/ui/button/index.js";
-
+   import LoginModal from "$lib/components/LoginModal.svelte";
+   import RefreshDataModal from "$lib/components/RefreshDataModal.svelte";
+   import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
 
    const API_BASE_URL =
       import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
+   let showLoginModal = $state(false);
+   let showRefreshModal = $state(false);
+
    const currentDate = new Date();
    const currentYear = currentDate.getFullYear();
    const currentMonth = currentDate.getMonth();
+   const currentDay = currentDate.getDate();
    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
    const monthName = currentDate.toLocaleDateString("id-ID", {
       month: "long",
@@ -35,13 +43,24 @@
       total_transaksi: 0,
       data: [],
    });
-   let chartData = $state<{ date: Date; umum: number; online: number; offline: number; conflict: number; label: string }[]>([]);
+   let chartData = $state<
+      {
+         date: Date;
+         umum: number;
+         online: number;
+         offline: number;
+         conflict: number;
+         label: string;
+      }[]
+   >([]);
    let totalAmount = $state(0);
    let avgDaily = $state(0);
    let selectedPeriod = $state<ChartPeriod>("harian");
 
    // Check if queries exist
-   let hasQueries = $derived($globalState.queryOnline.trim() || $globalState.queryOffline.trim());
+   let hasQueries = $derived(
+      $globalState.queryOnline.trim() || $globalState.queryOffline.trim()
+   );
 
    const chartConfig = {
       umum: {
@@ -67,8 +86,7 @@
    } satisfies Chart.ChartConfig;
 
    let isLoading = $state(false);
-   let pollingInterval: ReturnType<typeof setInterval> | null = null;
-
+   let pollingInterval = $state<ReturnType<typeof setInterval> | null>(null);
 
    // Load data ketika component mount
    onMount(() => {
@@ -78,26 +96,47 @@
    async function loadData() {
       const cookie = $globalState.cookie;
       if (!cookie) {
-         console.log("No cookie available");
+         console.warn("No cookie available");
+         showLoginModal = true;
          return;
       }
-      
+
       if (isLoading) return;
       isLoading = true;
 
       try {
-         console.log("Fetching data with cookie:", cookie);
+         console.log("Fetching data with cookie");
 
-         // Create date range for current month
+         // Create date range from 1st to today
          const fromDate = new CalendarDate(currentYear, currentMonth + 1, 1);
          const toDate = new CalendarDate(
             currentYear,
             currentMonth + 1,
-            daysInMonth
+            currentDay
          );
 
-         // Try to get cached data first
-         const result = await fetchData(fromDate, toDate);
+         // Try to get cached data first with auth callback
+         const result = await fetchData(
+            fromDate,
+            toDate,
+            "data-cached",
+            async () => {
+               // Auth required callback
+               showLoginModal = true;
+               setAuthenticating(true);
+               // Wait for modal to close (user logged in)
+               await new Promise<void>((resolve) => {
+                  const unsubscribe = $effect.root(() => {
+                     $effect(() => {
+                        if (!showLoginModal) {
+                           unsubscribe();
+                           resolve();
+                        }
+                     });
+                  });
+               });
+            }
+         );
 
          // Handle different response types
          if (result.status === "processing") {
@@ -116,23 +155,18 @@
                description: "Memulai looping request pagination",
             });
 
-            await startFetch(fromDate, toDate);
+            await startFetch(fromDate, toDate, async () => {
+               showLoginModal = true;
+               setAuthenticating(true);
+            });
             await startPolling(fromDate, toDate);
             return;
          }
 
          // Process successful data
-         if (
-            "status" in result &&
-            result.status === "completed" &&
-            "data" in result.data
-         ) {
+         if (result.status === "completed" && "data" in result) {
             transaksiData = (result as NestedTransaksiResponse).data;
             processChartData((result as NestedTransaksiResponse).data.data);
-         } else if (Array.isArray(result.data)) {
-            // Normal response without status
-            transaksiData = result as TransaksiResponse;
-            processChartData((result as TransaksiResponse).data);
          } else {
             // Fallback to empty data
             console.log("Invalid data format:", result);
@@ -150,29 +184,30 @@
       }
    }
 
-   async function startPolling(
-      fromDate: CalendarDate,
-      toDate: CalendarDate
-   ) {
+   async function startPolling(fromDate: CalendarDate, toDate: CalendarDate) {
       if (pollingInterval) clearInterval(pollingInterval);
 
       pollingInterval = setInterval(async () => {
          try {
-            const result = await fetchData(fromDate, toDate);
+            const result = await fetchData(
+               fromDate,
+               toDate,
+               "data-cached",
+               async () => {
+                  clearInterval(pollingInterval!);
+                  pollingInterval = null;
+                  isLoading = false;
+                  showLoginModal = true;
+                  setAuthenticating(true);
+               }
+            );
 
             if (result.status === "completed") {
                clearInterval(pollingInterval!);
                pollingInterval = null;
 
-               if ("data" in result.data) {
-                  transaksiData = (result as NestedTransaksiResponse).data;
-                  processChartData(
-                     (result as NestedTransaksiResponse).data.data
-                  );
-               } else {
-                  transaksiData = result as TransaksiResponse;
-                  processChartData((result as TransaksiResponse).data);
-               }
+               transaksiData = (result as NestedTransaksiResponse).data;
+               processChartData((result as NestedTransaksiResponse).data.data);
                isLoading = false;
 
                toast.success("Data berhasil dimuat!", {
@@ -212,10 +247,14 @@
          (sum: number, item: any) => sum + item.total_tagihan,
          0
       );
-      
+
       // Calculate average based on period
-      const divisor = selectedPeriod === "harian" ? daysInMonth : 
-                     selectedPeriod === "mingguan" ? 12 : 12;
+      const divisor =
+         selectedPeriod === "harian"
+            ? daysInMonth
+            : selectedPeriod === "mingguan"
+              ? 12
+              : 12;
       avgDaily = Math.floor(totalAmount / divisor);
    }
 
@@ -233,18 +272,28 @@
             clearInterval(pollingInterval);
             pollingInterval = null;
          }
+         clearPendingRequests();
       };
    });
 </script>
 
 <div class="grid gap-4 md:gap-6">
+   <div class="flex justify-end">
+      <Button variant="outline" size="sm" onclick={() => (showRefreshModal = true)}>
+         <RefreshCwIcon class="w-4 h-4 mr-2" />
+         Perbarui Data Server
+      </Button>
+   </div>
+
    {#if isLoading}
       <div class="flex items-center justify-center p-8">
          <div class="text-center">
             <div
                class="w-8 h-8 mx-auto mb-2 border-b-2 rounded-full animate-spin border-primary"
             ></div>
-            <p class="text-sm text-muted-foreground">Backend sedang mengambil data...</p>
+            <p class="text-sm text-muted-foreground">
+               Backend sedang mengambil data...
+            </p>
          </div>
       </div>
    {/if}
@@ -269,7 +318,8 @@
          <Card.Header
             class="flex flex-row items-center justify-between pb-2 space-y-0"
          >
-            <Card.Title class="text-sm font-medium">Rata-rata Harian</Card.Title>
+            <Card.Title class="text-sm font-medium">Rata-rata Harian</Card.Title
+            >
             <TrendingDownIcon class="w-4 h-4 text-muted-foreground" />
          </Card.Header>
          <Card.Content>
@@ -315,111 +365,128 @@
       <Card.Header>
          <div class="flex items-center justify-between">
             <div>
-               <Card.Title>Grafik Transaksi {selectedPeriod === "harian" ? "Harian" : selectedPeriod === "mingguan" ? "Mingguan" : "Bulanan"}</Card.Title>
+               <Card.Title
+                  >Grafik Transaksi {selectedPeriod === "harian"
+                     ? "Harian"
+                     : selectedPeriod === "mingguan"
+                       ? "Mingguan"
+                       : "Bulanan"}</Card.Title
+               >
                <Card.Description>
                   {#if selectedPeriod === "harian"}
-                     Menampilkan total transaksi dari tanggal 1 hingga akhir bulan {monthName}
+                     Menampilkan total transaksi dari tanggal 1 hingga akhir
+                     bulan {monthName}
                   {:else if selectedPeriod === "mingguan"}
-                     Menampilkan total transaksi per minggu dalam 3 bulan terakhir
+                     Menampilkan total transaksi per minggu dalam 3 bulan
+                     terakhir
                   {:else}
-                     Menampilkan total transaksi per bulan dalam 12 bulan terakhir
+                     Menampilkan total transaksi per bulan dalam 12 bulan
+                     terakhir
                   {/if}
                </Card.Description>
             </div>
             <div class="flex gap-2">
-               <Button
-                  variant={selectedPeriod === "harian" ? "default" : "outline"}
-                  size="sm"
-                  onclick={() => selectedPeriod = "harian"}
-               >
-                  Harian
-               </Button>
-               <Button
-                  variant={selectedPeriod === "mingguan" ? "default" : "outline"}
-                  size="sm"
-                  onclick={() => selectedPeriod = "mingguan"}
-               >
-                  Mingguan
-               </Button>
-               <Button
-                  variant={selectedPeriod === "bulanan" ? "default" : "outline"}
-                  size="sm"
-                  onclick={() => selectedPeriod = "bulanan"}
-               >
-                  Bulanan
-               </Button>
+               <Button variant="default" size="sm">Harian</Button>
             </div>
          </div>
       </Card.Header>
-      <Card.Content>
-         <Chart.Container config={chartConfig}>
-            <AreaChart
-               data={chartData}
-               x="date"
-               series={hasQueries ? [
-                  {
-                     key: "umum",
-                     label: "Umum",
-                     color: chartConfig.umum.color,
-                  },
-                  {
-                     key: "online",
-                     label: "Online",
-                     color: chartConfig.online.color,
-                  },
-                  {
-                     key: "offline",
-                     label: "Offline",
-                     color: chartConfig.offline.color,
-                  },
-                  {
-                     key: "conflict",
-                     label: "Conflict",
-                     color: chartConfig.conflict.color,
-                  },
-               ] : [
-                  {
-                     key: "umum",
-                     label: "Total Transaksi",
-                     color: chartConfig.umum.color,
-                  },
-               ]}
-               props={{
-                  area: {
-                     "fill-opacity": 0.4,
-                     line: { class: "stroke-2" },
-                  },
-                  xAxis: {
-                     format: (v: any) => {
-                        if (v instanceof Date) {
-                           const index = chartData.findIndex(d => d.date.getTime() === v.getTime());
-                           // Show every nth label to prevent overlap
-                           const skipInterval = selectedPeriod === "harian" ? 4 : selectedPeriod === "mingguan" ? 2 : 2;
-                           if (index % skipInterval !== 0) return "";
-                           return chartData[index]?.label || v.getDate().toString();
-                        }
-                        return String(v);
+      <Card.Content class="h-[450px]">
+         {#if isLoading}
+            <div class="flex items-center justify-center h-full">
+               <div class="w-full space-y-3">
+                  <div class="h-8 rounded bg-muted animate-pulse"></div>
+                  <div class="h-64 rounded bg-muted animate-pulse"></div>
+                  <div class="h-8 rounded bg-muted animate-pulse"></div>
+               </div>
+            </div>
+         {:else}
+            <Chart.Container config={chartConfig} class="h-full">
+               <AreaChart
+                  data={chartData}
+                  x="date"
+                  series={hasQueries
+                     ? [
+                          {
+                             key: "umum",
+                             label: "Umum",
+                             color: chartConfig.umum.color,
+                          },
+                          {
+                             key: "online",
+                             label: "Online",
+                             color: chartConfig.online.color,
+                          },
+                          {
+                             key: "offline",
+                             label: "Offline",
+                             color: chartConfig.offline.color,
+                          },
+                          {
+                             key: "conflict",
+                             label: "Conflict",
+                             color: chartConfig.conflict.color,
+                          },
+                       ]
+                     : [
+                          {
+                             key: "umum",
+                             label: "Total Transaksi",
+                             color: chartConfig.umum.color,
+                          },
+                       ]}
+                  props={{
+                     area: {
+                        "fill-opacity": 0.5,
+                        line: { class: "stroke-[2.5px]" },
                      },
-                  },
-                  yAxis: {
-                     format: (v: number) => `${(v / 1000000).toFixed(1)}M`,
-                  },
-               }}
-            >
-               {#snippet tooltip()}
-                  <Chart.Tooltip
-                     class="rounded-md border bg-background p-3 shadow-md"
-                     labelFormatter={(v: Date) => {
-                        return v.toLocaleDateString("id-ID", {
-                           day: "numeric",
-                           month: "long",
-                           year: "numeric",
-                        });
-                     }}
-                  />
-               {/snippet}
-            </AreaChart>
-         </Chart.Container>
+                     xAxis: {
+                        format: (v: any) => {
+                           if (v instanceof Date) {
+                              const index = chartData.findIndex(
+                                 (d) => d.date.getTime() === v.getTime()
+                              );
+                              const skipInterval =
+                                 selectedPeriod === "harian"
+                                    ? 5
+                                    : selectedPeriod === "mingguan"
+                                      ? 1
+                                      : 1;
+                              if (index % skipInterval !== 0) return "";
+                              return (
+                                 chartData[index]?.label ||
+                                 v.getDate().toString()
+                              );
+                           }
+                           return String(v);
+                        },
+                     },
+                     yAxis: {
+                        format: (v: number) => {
+                           if (v >= 1000000000)
+                              return `${(v / 1000000000).toFixed(1)}B`;
+                           if (v >= 1000000)
+                              return `${(v / 1000000).toFixed(1)}M`;
+                           if (v >= 1000) return `${(v / 1000).toFixed(0)}K`;
+                           return v.toString();
+                        },
+                     },
+                  }}
+               >
+                  {#snippet tooltip()}
+                     <Chart.Tooltip
+                        class="p-3 border rounded-md shadow-md bg-background min-w-[200px]"
+                        labelFormatter={(v: Date) => {
+                           return v.toLocaleDateString("id-ID", {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                           });
+                        }}
+                     />
+                  {/snippet}
+               </AreaChart>
+            </Chart.Container>
+         {/if}
       </Card.Content>
       <Card.Footer>
          <div class="flex items-start w-full gap-2 text-sm">
@@ -428,7 +495,9 @@
                   Data transaksi bulan {monthName}
                   <TrendingUpIcon class="size-4" />
                </div>
-               <div class="flex items-center gap-2 leading-none text-muted-foreground">
+               <div
+                  class="flex items-center gap-2 leading-none text-muted-foreground"
+               >
                   Total: Rp {totalAmount.toLocaleString("id-ID")}
                </div>
             </div>
@@ -436,3 +505,6 @@
       </Card.Footer>
    </Card.Root>
 </div>
+
+<LoginModal bind:open={showLoginModal} bind:pollingInterval />
+<RefreshDataModal bind:open={showRefreshModal} />

@@ -1,21 +1,18 @@
 <script lang="ts">
    import * as Tabs from "$lib/components/ui/tabs/index.js";
    import * as Card from "$lib/components/ui/card/index.js";
+   import { Button } from "$lib/components/ui/button/index.js";
    import FieldTransaksi from "$lib/components/field-transaksi.svelte";
    import QuerySettings from "$lib/components/query-settings.svelte";
-   import ForceActions from "$lib/components/force-actions.svelte";
+   import RefreshDataModal from "$lib/components/RefreshDataModal.svelte";
+   import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
 
    let fieldTransaksiRef: FieldTransaksi;
-
+   let showRefreshModal = $state(false);
 
    function handleQueryChange() {
       // Trigger reclassification in FieldTransaksi component
       fieldTransaksiRef?.reclassifyData?.();
-   }
-
-   function handleDataUpdate(data: any) {
-      // Update field transaksi with new data
-      fieldTransaksiRef?.updateData?.(data);
    }
 
 
@@ -29,6 +26,12 @@
       </Tabs.List>
       
       <Tabs.Content value="laporan">
+         <div class="flex justify-end mb-4">
+            <Button variant="outline" size="sm" onclick={() => (showRefreshModal = true)}>
+               <RefreshCwIcon class="w-4 h-4 mr-2" />
+               Perbarui Data Server
+            </Button>
+         </div>
          <div class="grid w-full grid-cols-3 gap-4">
             <div class="col-span-3 space-y-4 w-full gap-0.5 md:col-span-3">
                <FieldTransaksi bind:this={fieldTransaksiRef} />
@@ -50,24 +53,9 @@
                </Card.Content>
             </Card.Root>
 
-            <Card.Root>
-               <Card.Header>
-                  <Card.Title>Advanced Actions</Card.Title>
-                  <Card.Description>
-                     Aksi lanjutan untuk mengatasi data kosong dan refresh paksa
-                  </Card.Description>
-               </Card.Header>
-               <Card.Content>
-                  <ForceActions 
-                     fromDate={fieldTransaksiRef?.fromDate} 
-                     toDate={fieldTransaksiRef?.toDate}
-                     onDataUpdate={handleDataUpdate}
-                  />
-               </Card.Content>
-            </Card.Root>
-
-
          </div>
       </Tabs.Content>
    </Tabs.Root>
 </div>
+
+<RefreshDataModal bind:open={showRefreshModal} />

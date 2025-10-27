@@ -5,16 +5,20 @@
    import RefreshCw from "@lucide/svelte/icons/refresh-cw";
    import Database from "@lucide/svelte/icons/database";
    import AlertTriangle from "@lucide/svelte/icons/alert-triangle";
-   import { forceEmptyData, forceRefreshData } from "$lib/api";
+   import { forceEmptyData, forceRefreshData, setAuthenticating } from "$lib/apiClient";
+   import LoginModal from "$lib/components/LoginModal.svelte";
    import type { DateValue } from "@internationalized/date";
    import { toast } from "svelte-sonner";
 
-   export let fromDate: DateValue | undefined;
-   export let toDate: DateValue | undefined;
-   export let onDataUpdate: (data: any) => void;
+   let { fromDate, toDate, onDataUpdate }: {
+      fromDate: DateValue | undefined;
+      toDate: DateValue | undefined;
+      onDataUpdate: (data: any) => void;
+   } = $props();
 
-   let isForceEmptyLoading = false;
-   let isForceRefreshLoading = false;
+   let isForceEmptyLoading = $state(false);
+   let isForceRefreshLoading = $state(false);
+   let showLoginModal = $state(false);
 
    async function handleForceEmpty() {
       if (!fromDate || !toDate) {
@@ -25,7 +29,10 @@
       isForceEmptyLoading = true;
       try {
          toast.info("Mencari data kosong dan memaksa refresh...");
-         const result = await forceEmptyData(fromDate, toDate);
+         const result = await forceEmptyData(fromDate, toDate, async () => {
+            showLoginModal = true;
+            setAuthenticating(true);
+         });
          onDataUpdate(result);
          toast.success("Data berhasil diperbarui (force empty)");
       } catch (error) {
@@ -45,7 +52,10 @@
       isForceRefreshLoading = true;
       try {
          toast.info("Memaksa refresh semua data dari database...");
-         const result = await forceRefreshData(fromDate, toDate);
+         const result = await forceRefreshData(fromDate, toDate, async () => {
+            showLoginModal = true;
+            setAuthenticating(true);
+         });
          onDataUpdate(result);
          toast.success("Data berhasil diperbarui (force refresh)");
       } catch (error) {
@@ -108,3 +118,5 @@
       </Button>
    </div>
 </div>
+
+<LoginModal bind:open={showLoginModal} />
