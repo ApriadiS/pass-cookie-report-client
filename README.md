@@ -1,4 +1,4 @@
-# Sales Report Client v1.1.0
+# Sales Report Client v1.2.0
 
 A modern web application for sales transaction reporting and analytics built with Svelte, TypeScript, and Vite.
 
