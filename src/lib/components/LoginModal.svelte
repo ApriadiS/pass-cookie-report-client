@@ -75,38 +75,44 @@
             Sesi Anda telah berakhir. Silakan login kembali.
          </Dialog.Description>
       </Dialog.Header>
-      <div class="grid gap-4 py-4">
-         <div class="grid gap-2">
-            <Label for="username" class="text-xs md:text-sm">Username</Label>
-            <Input
-               id="username"
-               type="text"
-               bind:value={username}
-               placeholder="Masukkan username"
-               disabled={isLoading}
-               class="h-11 text-sm md:h-10"
-            />
+      {#if isLoading}
+         <div class="flex flex-col items-center justify-center py-8">
+            <div class="w-8 h-8 mb-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-sm text-muted-foreground mb-2">Sedang login...</p>
+            <p class="text-xs text-muted-foreground text-center">Mohon tunggu, sistem sedang memverifikasi kredensial Anda</p>
          </div>
-         <div class="grid gap-2">
-            <Label for="password" class="text-xs md:text-sm">Password</Label>
-            <Input
-               id="password"
-               type="password"
-               bind:value={password}
-               placeholder="Masukkan password"
-               disabled={isLoading}
-               class="h-11 text-sm md:h-10"
-               onkeydown={(e) => {
-                  if (e.key === "Enter") handleLogin();
-               }}
-            />
+      {:else}
+         <div class="grid gap-4 py-4">
+            <div class="grid gap-2">
+               <Label for="username" class="text-xs md:text-sm">Username</Label>
+               <Input
+                  id="username"
+                  type="text"
+                  bind:value={username}
+                  placeholder="Masukkan username"
+                  class="h-11 text-sm md:h-10"
+               />
+            </div>
+            <div class="grid gap-2">
+               <Label for="password" class="text-xs md:text-sm">Password</Label>
+               <Input
+                  id="password"
+                  type="password"
+                  bind:value={password}
+                  placeholder="Masukkan password"
+                  class="h-11 text-sm md:h-10"
+                  onkeydown={(e) => {
+                     if (e.key === "Enter") handleLogin();
+                  }}
+               />
+            </div>
          </div>
-      </div>
-      <Dialog.Footer class="flex-col gap-2 sm:flex-row">
-         <Button onclick={handleLogin} disabled={isLoading} class="h-11 w-full text-sm md:h-10 md:w-auto">
-            {isLoading ? "Loading..." : "Login"}
-         </Button>
-      </Dialog.Footer>
+         <Dialog.Footer class="flex-col gap-2 sm:flex-row">
+            <Button onclick={handleLogin} class="h-11 w-full text-sm md:h-10 md:w-auto">
+               Login
+            </Button>
+         </Dialog.Footer>
+      {/if}
    </Dialog.Content>
 </Dialog.Root>
 

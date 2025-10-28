@@ -119,11 +119,24 @@ export async function apiRequest<T>(
             // Handle 401 Unauthorized
             if (response.status === 401 && options.onAuthRequired) {
                console.log('[API] Auth required, triggering callback');
+               const oldCookie = get(globalState).cookie;
                await options.onAuthRequired();
-               // Reload cookie from globalState before retry
-               const newCookie = get(globalState).cookie;
+               
+               // Wait for cookie to actually change (max 10 seconds)
+               let attempts = 0;
+               let newCookie = get(globalState).cookie;
+               while (newCookie === oldCookie && attempts < 100) {
+                  await new Promise(resolve => setTimeout(resolve, 100));
+                  newCookie = get(globalState).cookie;
+                  attempts++;
+               }
+               
+               if (newCookie === oldCookie) {
+                  throw new Error('Cookie not updated after login');
+               }
+               
                const newBody = { ...body, cookie: newCookie };
-               console.log('[API] Retrying with new cookie');
+               console.log('[API] Retrying with new cookie (changed from old)');
                // Retry request after auth
                return apiRequest<T>(url, newBody, { ...options, skipDedup: true });
             }
@@ -139,12 +152,25 @@ export async function apiRequest<T>(
             console.log('[API] Unauthorized detected! Has callback:', !!options.onAuthRequired);
             if (options.onAuthRequired) {
                console.log('[API] Triggering auth callback...');
+               const oldCookie = get(globalState).cookie;
                await options.onAuthRequired();
+               
+               // Wait for cookie to actually change (max 10 seconds)
+               let attempts = 0;
+               let newCookie = get(globalState).cookie;
+               while (newCookie === oldCookie && attempts < 100) {
+                  await new Promise(resolve => setTimeout(resolve, 100));
+                  newCookie = get(globalState).cookie;
+                  attempts++;
+               }
+               
+               if (newCookie === oldCookie) {
+                  throw new Error('Cookie not updated after login');
+               }
+               
                console.log('[API] Auth callback completed, retrying request...');
-               // Reload cookie from globalState before retry
-               const newCookie = get(globalState).cookie;
                const newBody = { ...body, cookie: newCookie };
-               console.log('[API] Retrying with new cookie');
+               console.log('[API] Retrying with new cookie (changed from old)');
                // Retry request after auth
                return apiRequest<T>(url, newBody, { ...options, skipDedup: true });
             } else {
