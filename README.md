@@ -1,4 +1,4 @@
-# Sales Report Client v1.2.0
+# Sales Report Client v1.2.5
 
 A modern web application for sales transaction reporting and analytics built with Svelte, TypeScript, and Vite.
 
@@ -76,7 +76,7 @@ npm run dev
 ### Sales Dashboard
 - Monthly sales overview with interactive charts
 - Real-time transaction statistics
-- Multiple chart periods (Daily, Weekly, Monthly)
+- Optimized for mobile devices with touch-friendly UI
 
 ### Transaction Classification
 - Intelligent query-based classification system
@@ -84,9 +84,16 @@ npm run dev
 - Conflict detection for ambiguous transactions
 
 ### Advanced Data Management
-- **Force Empty**: Refresh empty cached data from database
 - **Force Refresh**: Override all cache with fresh database data
-- Backend pagination support with user feedback
+- Smart caching with automatic retry on auth failure
+- Seamless login flow with cookie management
+
+### Mobile Optimization
+- Touch targets ≥ 44px (iOS guideline)
+- Responsive header (48px mobile, 64px desktop)
+- Full-width date picker on mobile
+- Optimized modals and forms for small screens
+- Better spacing and readability
 
 ## Environment Variables
 
@@ -98,10 +105,9 @@ VITE_DEFAULT_COOKIE=                     # Default authentication cookie
 
 ## API Endpoints
 
-- `POST /start-fetch` - Start background data fetching job
-- `POST /data-cached` - Get cached transaction data
-- `POST /force-empty` - Force refresh empty cached data
+- `POST /data-cached` - Get cached transaction data with smart fetching
 - `POST /force-refresh` - Force refresh all data from database
+- `POST /login` - Authenticate and get new cookie
 
 ## License
 
