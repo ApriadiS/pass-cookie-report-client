@@ -277,11 +277,12 @@
    });
 </script>
 
-<div class="grid gap-4 md:gap-6">
+<div class="grid gap-2 p-2 md:gap-6 md:p-0">
    <div class="flex justify-end">
-      <Button variant="outline" size="sm" onclick={() => (showRefreshModal = true)}>
-         <RefreshCwIcon class="w-4 h-4 mr-2" />
-         Perbarui Data Server
+      <Button variant="outline" size="sm" onclick={() => (showRefreshModal = true)} class="h-11 px-3 text-xs md:h-9 md:px-4 md:text-sm">
+         <RefreshCwIcon class="w-3 h-3 mr-1 md:w-4 md:h-4 md:mr-2" />
+         <span class="hidden sm:inline">Perbarui Data Server</span>
+         <span class="sm:hidden">Perbarui</span>
       </Button>
    </div>
 
@@ -298,63 +299,63 @@
       </div>
    {/if}
 
-   <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+   <div class="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-4 lg:grid-cols-4">
       <Card.Root>
          <Card.Header
-            class="flex flex-row items-center justify-between pb-2 space-y-0"
+            class="flex flex-row items-center justify-between p-2 pb-1 space-y-0 md:p-6 md:pb-2"
          >
-            <Card.Title class="text-sm font-medium">Total Transaksi</Card.Title>
-            <TrendingUpIcon class="w-4 h-4 text-muted-foreground" />
+            <Card.Title class="text-[11px] font-medium md:text-sm">Total Transaksi</Card.Title>
+            <TrendingUpIcon class="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
          </Card.Header>
-         <Card.Content>
-            <div class="text-2xl font-bold">
-               Rp {totalAmount.toLocaleString("id-ID")}
+         <Card.Content class="p-2 pt-0 md:p-6 md:pt-0">
+            <div class="text-base font-bold md:text-2xl">
+               Rp {(totalAmount / 1000000).toFixed(1)}M
             </div>
-            <p class="text-xs text-muted-foreground">{monthName}</p>
+            <p class="text-[9px] md:text-xs text-muted-foreground truncate">{monthName}</p>
          </Card.Content>
       </Card.Root>
 
       <Card.Root>
          <Card.Header
-            class="flex flex-row items-center justify-between pb-2 space-y-0"
+            class="flex flex-row items-center justify-between p-2 pb-1 space-y-0 md:p-6 md:pb-2"
          >
-            <Card.Title class="text-sm font-medium">Rata-rata Harian</Card.Title
+            <Card.Title class="text-[11px] font-medium md:text-sm">Rata-rata Harian</Card.Title
             >
-            <TrendingDownIcon class="w-4 h-4 text-muted-foreground" />
+            <TrendingDownIcon class="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
          </Card.Header>
-         <Card.Content>
-            <div class="text-2xl font-bold">
-               Rp {avgDaily.toLocaleString("id-ID")}
+         <Card.Content class="p-2 pt-0 md:p-6 md:pt-0">
+            <div class="text-base font-bold md:text-2xl">
+               Rp {(avgDaily / 1000).toFixed(0)}K
             </div>
-            <p class="text-xs text-muted-foreground">Per hari</p>
+            <p class="text-[9px] md:text-xs text-muted-foreground">Per hari</p>
          </Card.Content>
       </Card.Root>
 
       <Card.Root>
          <Card.Header
-            class="flex flex-row items-center justify-between pb-2 space-y-0"
+            class="flex flex-row items-center justify-between p-2 pb-1 space-y-0 md:p-6 md:pb-2"
          >
-            <Card.Title class="text-sm font-medium">Hari Aktif</Card.Title>
-            <TrendingUpIcon class="w-4 h-4 text-muted-foreground" />
+            <Card.Title class="text-[11px] font-medium md:text-sm">Hari Aktif</Card.Title>
+            <TrendingUpIcon class="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
          </Card.Header>
-         <Card.Content>
-            <div class="text-2xl font-bold">
+         <Card.Content class="p-2 pt-0 md:p-6 md:pt-0">
+            <div class="text-base font-bold md:text-2xl">
                {transaksiData.data?.length || 0}
             </div>
-            <p class="text-xs text-muted-foreground">Total transaksi</p>
+            <p class="text-[9px] md:text-xs text-muted-foreground">Total transaksi</p>
          </Card.Content>
       </Card.Root>
 
       <Card.Root>
          <Card.Header
-            class="flex flex-row items-center justify-between pb-2 space-y-0"
+            class="flex flex-row items-center justify-between p-2 pb-1 space-y-0 md:p-6 md:pb-2"
          >
-            <Card.Title class="text-sm font-medium">Hari Ini</Card.Title>
-            <TrendingUpIcon class="w-4 h-4 text-muted-foreground" />
+            <Card.Title class="text-[11px] font-medium md:text-sm">Hari Ini</Card.Title>
+            <TrendingUpIcon class="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
          </Card.Header>
-         <Card.Content>
-            <div class="text-2xl font-bold">{currentDate.getDate()}</div>
-            <p class="text-xs text-muted-foreground">
+         <Card.Content class="p-2 pt-0 md:p-6 md:pt-0">
+            <div class="text-base font-bold md:text-2xl">{currentDate.getDate()}</div>
+            <p class="text-[9px] md:text-xs text-muted-foreground truncate">
                {currentDate.toLocaleDateString("id-ID", { weekday: "long" })}
             </p>
          </Card.Content>
@@ -362,35 +363,35 @@
    </div>
 
    <Card.Root>
-      <Card.Header>
-         <div class="flex items-center justify-between">
-            <div>
-               <Card.Title
+      <Card.Header class="p-2 md:p-6">
+         <div class="flex flex-col gap-1 md:gap-2 md:flex-row md:items-center md:justify-between">
+            <div class="flex-1 min-w-0">
+               <Card.Title class="text-xs md:text-base"
                   >Grafik Transaksi {selectedPeriod === "harian"
                      ? "Harian"
                      : selectedPeriod === "mingguan"
                        ? "Mingguan"
                        : "Bulanan"}</Card.Title
                >
-               <Card.Description>
+               <Card.Description class="text-[10px] md:text-sm">
                   {#if selectedPeriod === "harian"}
-                     Menampilkan total transaksi dari tanggal 1 hingga akhir
-                     bulan {monthName}
+                     <span class="hidden md:inline">Menampilkan total transaksi dari tanggal 1 hingga akhir bulan {monthName}</span>
+                     <span class="md:hidden">Transaksi {monthName}</span>
                   {:else if selectedPeriod === "mingguan"}
-                     Menampilkan total transaksi per minggu dalam 3 bulan
-                     terakhir
+                     <span class="hidden md:inline">Menampilkan total transaksi per minggu dalam 3 bulan terakhir</span>
+                     <span class="md:hidden">Per minggu (3 bulan)</span>
                   {:else}
-                     Menampilkan total transaksi per bulan dalam 12 bulan
-                     terakhir
+                     <span class="hidden md:inline">Menampilkan total transaksi per bulan dalam 12 bulan terakhir</span>
+                     <span class="md:hidden">Per bulan (12 bulan)</span>
                   {/if}
                </Card.Description>
             </div>
             <div class="flex gap-2">
-               <Button variant="default" size="sm">Harian</Button>
+               <Button variant="default" size="sm" class="h-11 px-3 text-xs md:h-9 md:px-4 md:text-sm">Harian</Button>
             </div>
          </div>
       </Card.Header>
-      <Card.Content class="h-[450px]">
+      <Card.Content class="h-[250px] md:h-[450px] p-2 md:p-6">
          {#if isLoading}
             <div class="flex items-center justify-center h-full">
                <div class="w-full space-y-3">
@@ -488,17 +489,18 @@
             </Chart.Container>
          {/if}
       </Card.Content>
-      <Card.Footer>
-         <div class="flex items-start w-full gap-2 text-sm">
-            <div class="grid gap-2">
-               <div class="flex items-center gap-2 font-medium leading-none">
-                  Data transaksi bulan {monthName}
-                  <TrendingUpIcon class="size-4" />
+      <Card.Footer class="p-3 md:p-6">
+         <div class="flex flex-col w-full gap-1 text-xs md:flex-row md:items-start md:gap-2 md:text-sm">
+            <div class="grid gap-1 md:gap-2">
+               <div class="flex items-center gap-1.5 font-medium leading-none md:gap-2">
+                  <span class="hidden md:inline">Data transaksi bulan {monthName}</span>
+                  <span class="md:hidden">{monthName}</span>
+                  <TrendingUpIcon class="size-3.5 md:size-4" />
                </div>
                <div
-                  class="flex items-center gap-2 leading-none text-muted-foreground"
+                  class="flex items-center gap-1.5 leading-none md:gap-2 text-muted-foreground"
                >
-                  Total: Rp {totalAmount.toLocaleString("id-ID")}
+                  Total: Rp {(totalAmount / 1000000).toFixed(1)}M
                </div>
             </div>
          </div>

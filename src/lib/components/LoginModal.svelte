@@ -27,20 +27,22 @@
          // Use API client for login
          const cookie = await performLogin(username, password);
          
-         console.log("[LOGIN] Login successful");
-         toast.success("Login berhasil!");
+         console.log("[LOGIN] Login successful, saving cookie");
 
-         // Save cookie to globalState and localStorage
+         // Save cookie to globalState and localStorage FIRST
          setCookie(cookie);
          localStorage.setItem("cookie", cookie);
          
          // Force reload globalState to use new cookie
          globalState.set({ ...$globalState, cookie });
 
-         // Notify API client that auth is complete
-         setAuthenticating(false);
+         // Wait a tick to ensure cookie is saved
+         await new Promise(resolve => setTimeout(resolve, 100));
 
-         // Close modal
+         console.log("[LOGIN] Cookie saved, closing modal");
+         toast.success("Login berhasil!");
+
+         // Close modal FIRST
          open = false;
          username = "";
          password = "";
@@ -51,7 +53,10 @@
             pollingInterval = null;
          }
 
-         // No need to reload - auth callback will retry request
+         // Notify API client that auth is complete LAST
+         // This will trigger retry with new cookie
+         console.log("[LOGIN] Notifying auth complete");
+         setAuthenticating(false);
       } catch (error: any) {
          console.error("[LOGIN] Error:", error);
          toast.error(error.message || "Login gagal");
@@ -63,40 +68,42 @@
 </script>
 
 <Dialog.Root bind:open>
-   <Dialog.Content class="sm:max-w-[425px]">
-      <Dialog.Header>
-         <Dialog.Title>Login Required</Dialog.Title>
-         <Dialog.Description>
+   <Dialog.Content class="w-[calc(100%-2rem)] max-w-[425px] p-4 md:p-6">
+      <Dialog.Header class="space-y-2">
+         <Dialog.Title class="text-base md:text-lg">Login Required</Dialog.Title>
+         <Dialog.Description class="text-xs md:text-sm">
             Sesi Anda telah berakhir. Silakan login kembali.
          </Dialog.Description>
       </Dialog.Header>
       <div class="grid gap-4 py-4">
          <div class="grid gap-2">
-            <Label for="username">Username</Label>
+            <Label for="username" class="text-xs md:text-sm">Username</Label>
             <Input
                id="username"
                type="text"
                bind:value={username}
                placeholder="Masukkan username"
                disabled={isLoading}
+               class="h-11 text-sm md:h-10"
             />
          </div>
          <div class="grid gap-2">
-            <Label for="password">Password</Label>
+            <Label for="password" class="text-xs md:text-sm">Password</Label>
             <Input
                id="password"
                type="password"
                bind:value={password}
                placeholder="Masukkan password"
                disabled={isLoading}
+               class="h-11 text-sm md:h-10"
                onkeydown={(e) => {
                   if (e.key === "Enter") handleLogin();
                }}
             />
          </div>
       </div>
-      <Dialog.Footer>
-         <Button onclick={handleLogin} disabled={isLoading}>
+      <Dialog.Footer class="flex-col gap-2 sm:flex-row">
+         <Button onclick={handleLogin} disabled={isLoading} class="h-11 w-full text-sm md:h-10 md:w-auto">
             {isLoading ? "Loading..." : "Login"}
          </Button>
       </Dialog.Footer>

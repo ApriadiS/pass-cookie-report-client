@@ -14,10 +14,22 @@
       isRefreshing = true;
       
       try {
+         // Get current month date range
+         const now = new Date();
+         const year = now.getFullYear();
+         const month = now.getMonth() + 1;
+         const day = now.getDate();
+         const from = `01/${month.toString().padStart(2, '0')}/${year}`;
+         const to = `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+         
          const response = await fetch(`${API_BASE_URL}/force-refresh`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ cookie: $globalState.cookie }),
+            body: JSON.stringify({ 
+               from,
+               to,
+               cookie: $globalState.cookie 
+            }),
          });
 
          const result = await response.json();
@@ -46,19 +58,19 @@
 </script>
 
 <Dialog.Root bind:open>
-   <Dialog.Content>
-      <Dialog.Header>
-         <Dialog.Title>Perbarui Data Server</Dialog.Title>
-         <Dialog.Description>
+   <Dialog.Content class="w-[calc(100%-2rem)] max-w-[425px] p-4 md:p-6">
+      <Dialog.Header class="space-y-2">
+         <Dialog.Title class="text-base md:text-lg">Perbarui Data Server</Dialog.Title>
+         <Dialog.Description class="text-xs md:text-sm">
             Proses ini akan memakan waktu beberapa saat karena server perlu mengambil data terbaru dari database.
             Halaman akan dimuat ulang setelah selesai.
          </Dialog.Description>
       </Dialog.Header>
-      <Dialog.Footer>
-         <Button variant="outline" onclick={() => (open = false)} disabled={isRefreshing}>
+      <Dialog.Footer class="flex-col gap-2 sm:flex-row">
+         <Button variant="outline" onclick={() => (open = false)} disabled={isRefreshing} class="h-11 w-full text-sm md:h-10 md:w-auto">
             Batal
          </Button>
-         <Button onclick={handleRefresh} disabled={isRefreshing}>
+         <Button onclick={handleRefresh} disabled={isRefreshing} class="h-11 w-full text-sm md:h-10 md:w-auto">
             {isRefreshing ? "Memperbarui..." : "Perbarui Sekarang"}
          </Button>
       </Dialog.Footer>

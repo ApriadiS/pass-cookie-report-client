@@ -43,7 +43,7 @@
          <Button
             variant="outline"
             class={cn(
-               "w-[280px] justify-start text-left font-normal",
+               "w-full md:w-[280px] h-11 md:h-10 justify-start text-left font-normal text-xs md:text-sm",
                !value && "text-muted-foreground"
             )}
             {disabled}
@@ -56,13 +56,14 @@
          </Button>
       {/snippet}
    </Popover.Trigger>
-   <Popover.Content class="w-auto p-0">
+   <Popover.Content class="w-auto p-0 max-w-[calc(100vw-2rem)]">
       <Calendar
          bind:value
          type="single"
          initialFocus
          isDateDisabled={disableDate}
          {disabled}
+         class="text-sm md:text-base"
       />
    </Popover.Content>
 </Popover.Root>
