@@ -131,22 +131,22 @@
    });
 </script>
 
-<Field.Set>
+<Field.Set class="p-3 md:p-0">
    <!-- <Field.Legend>Laporan Transaksi</Field.Legend> -->
-   <Field.Description
+   <Field.Description class="text-xs md:text-sm"
       >Pilih rentang tanggal untuk melihat laporan</Field.Description
    >
    <Field.Group>
       <Field.Field>
-         <div class="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
-            <div class="flex flex-col gap-2">
-               <Field.Label class="text-sm font-medium"
+         <div class="grid w-full grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+            <div class="flex flex-col gap-1.5 md:gap-2">
+               <Field.Label class="text-xs font-medium md:text-sm"
                   >Dari Tanggal</Field.Label
                >
                <DatePicker bind:value={fromDate} />
             </div>
-            <div class="flex flex-col gap-2">
-               <Field.Label class="text-sm font-medium"
+            <div class="flex flex-col gap-1.5 md:gap-2">
+               <Field.Label class="text-xs font-medium md:text-sm"
                   >Sampai Tanggal</Field.Label
                >
                <DatePicker
