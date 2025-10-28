@@ -6,7 +6,7 @@
    import LoginModal from "$lib/components/LoginModal.svelte";
    import { setAuthenticating } from "$lib/apiClient";
 
-   let { open = $bindable(false) } = $props();
+   let { open = $bindable(false), fromDate = undefined, toDate = undefined } = $props();
 
    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -17,13 +17,21 @@
       isRefreshing = true;
       
       try {
-         // Get current month date range
-         const now = new Date();
-         const year = now.getFullYear();
-         const month = now.getMonth() + 1;
-         const day = now.getDate();
-         const from = `01/${month.toString().padStart(2, '0')}/${year}`;
-         const to = `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+         // Use provided dates or default to current month
+         let from, to;
+         if (fromDate && toDate) {
+            // Convert DateValue to string format
+            from = `${fromDate.day.toString().padStart(2, '0')}/${fromDate.month.toString().padStart(2, '0')}/${fromDate.year}`;
+            to = `${toDate.day.toString().padStart(2, '0')}/${toDate.month.toString().padStart(2, '0')}/${toDate.year}`;
+         } else {
+            // Default to current month (for Dashboard)
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            from = `01/${month.toString().padStart(2, '0')}/${year}`;
+            to = `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+         }
          
          const response = await fetch(`${API_BASE_URL}/force-refresh`, {
             method: "POST",

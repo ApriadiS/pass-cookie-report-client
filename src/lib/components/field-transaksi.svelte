@@ -10,7 +10,10 @@
    import { globalState } from "$lib/setting";
    import Accordian from "./accordian.svelte";
    import ClassifiedAccordions from "./classified-accordions.svelte";
-   import { classifyTransactions, type ClassifiedData } from "$lib/query-classifier";
+   import {
+      classifyTransactions,
+      type ClassifiedData,
+   } from "$lib/query-classifier";
    import { fetchData, setAuthenticating } from "$lib/apiClient";
    import type { TransaksiResponse, NestedTransaksiResponse } from "$lib/api";
    import LoginModal from "$lib/components/LoginModal.svelte";
@@ -30,7 +33,7 @@
       commander: [],
       online: [],
       offline: [],
-      conflict: []
+      conflict: [],
    });
 
    let showLoginModal = $state(false);
@@ -40,6 +43,16 @@
 
    // Export dates for parent components
    export { fromDate, toDate };
+
+   // Callback for parent component
+   let { onDatesChange } = $props();
+
+   // Notify parent when dates change
+   $effect(() => {
+      if (onDatesChange && fromDate && toDate) {
+         onDatesChange(fromDate, toDate);
+      }
+   });
 
    // Function to reclassify existing data
    export function reclassifyData() {
@@ -53,7 +66,9 @@
    }
 
    // Function to update data from external sources
-   export function updateData(newData: TransaksiResponse | NestedTransaksiResponse) {
+   export function updateData(
+      newData: TransaksiResponse | NestedTransaksiResponse
+   ) {
       // Handle nested response structure
       if (
          "status" in newData &&
@@ -81,10 +96,15 @@
             fromDateCache = fromDate;
             toDateCache = toDate;
             console.log("Cache disimpan");
-            const result = await fetchData(fromDate!, toDate!, 'data-cached', async () => {
-               showLoginModal = true;
-               setAuthenticating(true);
-            });
+            const result = await fetchData(
+               fromDate!,
+               toDate!,
+               "data-cached",
+               async () => {
+                  showLoginModal = true;
+                  setAuthenticating(true);
+               }
+            );
 
             // Handle nested response structure
             if (
@@ -106,10 +126,15 @@
          if (fromDate !== fromDateCache || toDate !== toDateCache) {
             fromDateCache = fromDate;
             toDateCache = toDate;
-            const result = await fetchData(fromDate!, toDate!, 'data-cached', async () => {
-               showLoginModal = true;
-               setAuthenticating(true);
-            });
+            const result = await fetchData(
+               fromDate!,
+               toDate!,
+               "data-cached",
+               async () => {
+                  showLoginModal = true;
+                  setAuthenticating(true);
+               }
+            );
 
             // Handle nested response structure
             if (

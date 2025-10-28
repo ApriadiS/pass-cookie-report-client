@@ -10,6 +10,17 @@
    let fieldTransaksiRef: FieldTransaksi;
    let showRefreshModal = $state(false);
 
+   // State for dates from FieldTransaksi
+   let fromDate = $state(undefined);
+   let toDate = $state(undefined);
+   let hasValidDates = $derived(!!fromDate && !!toDate);
+
+   // Function to receive dates from FieldTransaksi
+   function updateDates(newFromDate: any, newToDate: any) {
+      fromDate = newFromDate;
+      toDate = newToDate;
+   }
+
    function handleQueryChange() {
       // Trigger reclassification in FieldTransaksi component
       fieldTransaksiRef?.reclassifyData?.();
@@ -27,7 +38,7 @@
       
       <Tabs.Content value="laporan" class="mt-3 md:mt-6">
          <div class="flex justify-end mb-3 md:mb-4">
-            <Button variant="outline" size="sm" onclick={() => (showRefreshModal = true)} class="h-11 px-3 text-xs md:h-9 md:px-4 md:text-sm">
+            <Button variant="outline" size="sm" onclick={() => (showRefreshModal = true)} disabled={!hasValidDates} class="h-11 px-3 text-xs md:h-9 md:px-4 md:text-sm">
                <RefreshCwIcon class="w-3 h-3 mr-1 md:w-4 md:h-4 md:mr-2" />
                <span class="hidden sm:inline">Perbarui Data Server</span>
                <span class="sm:hidden">Perbarui</span>
@@ -35,7 +46,7 @@
          </div>
          <div class="grid w-full grid-cols-3 gap-3 md:gap-4">
             <div class="col-span-3 space-y-3 w-full md:space-y-4 md:col-span-3">
-               <FieldTransaksi bind:this={fieldTransaksiRef} />
+               <FieldTransaksi bind:this={fieldTransaksiRef} onDatesChange={updateDates} />
             </div>
          </div>
       </Tabs.Content>
@@ -59,4 +70,4 @@
    </Tabs.Root>
 </div>
 
-<RefreshDataModal bind:open={showRefreshModal} />
+<RefreshDataModal bind:open={showRefreshModal} {fromDate} {toDate} />
