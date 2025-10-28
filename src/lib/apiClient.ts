@@ -41,8 +41,12 @@ function notifyAuthComplete(success: boolean) {
 
 // Set auth state
 export function setAuthenticating(value: boolean) {
+   console.log('[API] setAuthenticating:', value);
    isAuthenticating = value;
    if (!value) {
+      // Clear all pending requests when auth completes
+      console.log('[API] Auth complete, clearing pending requests');
+      pendingRequests.clear();
       notifyAuthComplete(true);
    }
 }
