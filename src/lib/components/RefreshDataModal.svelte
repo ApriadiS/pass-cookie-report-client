@@ -3,12 +3,15 @@
    import { Button } from "$lib/components/ui/button/index.js";
    import { toast } from "svelte-sonner";
    import { globalState } from "$lib/setting";
+   import LoginModal from "$lib/components/LoginModal.svelte";
+   import { setAuthenticating } from "$lib/apiClient";
 
    let { open = $bindable(false) } = $props();
 
    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
    let isRefreshing = $state(false);
+   let showLoginModal = $state(false);
 
    async function handleRefresh() {
       isRefreshing = true;
@@ -31,6 +34,28 @@
                cookie: $globalState.cookie 
             }),
          });
+
+         // Handle 401 Unauthorized
+         if (response.status === 401) {
+            toast.error("Sesi berakhir", {
+               description: "Silakan login kembali",
+            });
+            showLoginModal = true;
+            setAuthenticating(true);
+            // Wait for login to complete
+            await new Promise<void>((resolve) => {
+               const unsubscribe = $effect.root(() => {
+                  $effect(() => {
+                     if (!showLoginModal) {
+                        unsubscribe();
+                        resolve();
+                     }
+                  });
+               });
+            });
+            // Retry after login
+            return handleRefresh();
+         }
 
          const result = await response.json();
 
@@ -76,3 +101,5 @@
       </Dialog.Footer>
    </Dialog.Content>
 </Dialog.Root>
+
+<LoginModal bind:open={showLoginModal} />
